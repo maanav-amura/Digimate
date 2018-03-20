@@ -2,6 +2,9 @@ package com.illuminati.maanav.digimate;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
@@ -96,6 +99,7 @@ public class CaptureActivity extends AppCompatActivity {
         }
     };
     private CameraPreview mPreview;
+    public static Bitmap capturedImage;
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
 
         @Override
@@ -116,10 +120,23 @@ public class CaptureActivity extends AppCompatActivity {
                 Log.v(TAG, e.getMessage());
             }
 
-            continueActivity();
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            capturedImage = rotateImage(BitmapFactory.decodeFile(pictureFile.getAbsolutePath(), options), 180);
+
+//            Log.w(TAG, bitmap.toString().length() + "");
+
+            nextStep();
         }
     };
-    private int TIME_DELAY = 2000;
+
+    private static Bitmap rotateImage(Bitmap img, int degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+        return rotatedImg;
+    }
+    private int TIME_DELAY = 5000;
 
     public static Camera getCameraInstance() {
         Camera c = null;
@@ -150,8 +167,8 @@ public class CaptureActivity extends AppCompatActivity {
         }
     }
 
-    private void continueActivity() {
-        Intent intent = new Intent(CaptureActivity.this, tempActivity.class);
+    private void nextStep() {
+        Intent intent = new Intent(CaptureActivity.this, BinarizationActivity.class);
         startActivity(intent);
     }
 

@@ -17,7 +17,7 @@ import java.io.IOException;
  */
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private static final int ZOOM = 5;
+    private static final int ZOOM = 10;
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private String TAG = "CameraPreview";
@@ -78,11 +78,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // start preview with new settings
         try {
 
-//            mCamera.setDisplayOrientation(90);  // Rotate camera initially
+            mCamera.setDisplayOrientation(90);  // Rotate camera initially
             Camera.Parameters parameters = mCamera.getParameters();
 
 //            parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
             int maxZoom = parameters.getMaxZoom();
             Log.w(TAG, "zoom: " + maxZoom);
             if (parameters.isZoomSupported()) {
