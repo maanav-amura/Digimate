@@ -16,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -112,17 +113,18 @@ public class CaptureActivity extends AppCompatActivity {
             }
             try {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
-                fos.write(data);
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                capturedImage = rotateImage(BitmapFactory.decodeByteArray(data, 0,
+                        data.length), 180);
+                capturedImage.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+                fos.flush();
                 fos.close();
             } catch (FileNotFoundException e) {
                 Log.v(TAG, e.getMessage());
             } catch (IOException e) {
                 Log.v(TAG, e.getMessage());
             }
-
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            capturedImage = rotateImage(BitmapFactory.decodeFile(pictureFile.getAbsolutePath(), options), 180);
 
             nextStep();
         }
@@ -132,7 +134,8 @@ public class CaptureActivity extends AppCompatActivity {
     private static Bitmap rotateImage(Bitmap img, int degree) {
         Matrix matrix = new Matrix();
         matrix.postRotate(degree);
-        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(),
+                matrix, true);
         return rotatedImg;
     }
 
@@ -141,8 +144,7 @@ public class CaptureActivity extends AppCompatActivity {
         try {
             c = Camera.open(); // Attempt to get a Camera instance
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-            // Camera is not available (in use or does not exist)
+            Log.e(TAG, e.getMessage()); // Camera is not available (in use or does not exist)
         }
         return c; // returns null if camera is unavailable
     }
@@ -152,7 +154,8 @@ public class CaptureActivity extends AppCompatActivity {
         if (!state.equals(Environment.MEDIA_MOUNTED)) {
             return null;
         } else {
-            File folder_gui = new File(Environment.getExternalStorageDirectory() + File.separator + "abc");
+            File folder_gui = new File(Environment.getExternalStorageDirectory() +
+                    File.separator + "abc");
             if (!folder_gui.exists()) {
                 folder_gui.mkdirs();
             }
@@ -176,7 +179,6 @@ public class CaptureActivity extends AppCompatActivity {
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
 
-
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -198,12 +200,15 @@ public class CaptureActivity extends AppCompatActivity {
 
         // Add a listener to the Capture button
         final Button captureButton = findViewById(R.id.button_capture);
+        captureButton.setVisibility(View.INVISIBLE);
         captureButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         // get an image from the camera
                         mCamera.takePicture(null, null, mPicture);
+                        Toast.makeText(CaptureActivity.this, "Image captured",
+                                Toast.LENGTH_SHORT);
                     }
                 }
         );

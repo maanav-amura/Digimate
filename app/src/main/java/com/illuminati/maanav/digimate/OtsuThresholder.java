@@ -4,34 +4,28 @@ package com.illuminati.maanav.digimate;
  * Created by amura on 19/3/18.
  */
 
-public class OtsuThresholder
-{
+public class OtsuThresholder {
     private int histData[];
     private int maxLevelValue;
     private int threshold;
 
-    public OtsuThresholder()
-    {
+    public OtsuThresholder() {
         histData = new int[256];
     }
 
-    public int[] getHistData()
-    {
+    public int[] getHistData() {
         return histData;
     }
 
-    public int getMaxLevelValue()
-    {
+    public int getMaxLevelValue() {
         return maxLevelValue;
     }
 
-    public int getThreshold()
-    {
+    public int getThreshold() {
         return threshold;
     }
 
-    public int doThreshold(byte[] srcData)
-    {
+    public int doThreshold(byte[] srcData) {
         int ptr;
 
         // Clear histogram data
@@ -43,19 +37,18 @@ public class OtsuThresholder
         // Note: the max level value isn't required by the Otsu method
         ptr = 0;
         maxLevelValue = 0;
-        while (ptr < srcData.length)
-        {
+        while (ptr < srcData.length) {
             int h = 0xFF & srcData[ptr];
-            histData[h] ++;
+            histData[h]++;
             if (histData[h] > maxLevelValue) maxLevelValue = histData[h];
-            ptr ++;
+            ptr++;
         }
 
         // Total number of pixels
         int total = srcData.length;
 
         float sum = 0;
-        for (int t=0 ; t<256 ; t++) sum += t * histData[t];
+        for (int t = 0; t < 256; t++) sum += t * histData[t];
 
         float sumB = 0;
         int wB = 0;
@@ -64,21 +57,20 @@ public class OtsuThresholder
         float varMax = 0;
         threshold = 0;
 
-        for (int t=0 ; t<256 ; t++)
-        {
-            wB += histData[t];					// Weight Background
+        for (int t = 0; t < 256; t++) {
+            wB += histData[t];                    // Weight Background
             if (wB == 0) continue;
 
-            wF = total - wB;						// Weight Foreground
+            wF = total - wB;                        // Weight Foreground
             if (wF == 0) break;
 
             sumB += (float) (t * histData[t]);
 
-            float mB = sumB / wB;				// Mean Background
-            float mF = (sum - sumB) / wF;		// Mean Foreground
+            float mB = sumB / wB;                // Mean Background
+            float mF = (sum - sumB) / wF;        // Mean Foreground
 
             // Calculate Between Class Variance
-            float varBetween = (float)wB * (float)wF * (mB - mF) * (mB - mF);
+            float varBetween = (float) wB * (float) wF * (mB - mF) * (mB - mF);
 
             // Check if new maximum found
             if (varBetween > varMax) {
@@ -86,8 +78,6 @@ public class OtsuThresholder
                 threshold = t;
             }
         }
-
-
         return threshold;
     }
 }

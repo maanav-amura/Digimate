@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,10 +37,8 @@ public class MainActivity extends AppCompatActivity {
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 TITLE = etTitle.getText().toString();
                 String pages = etPages.getText().toString();
-
                 if (TITLE.isEmpty()) {
                     Toast.makeText(MainActivity.this, "Please enter PDF title",
                             Toast.LENGTH_SHORT).show();
@@ -51,7 +48,9 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     PAGES = Integer.parseInt(pages);
                     CURRENT_PAGE = 0;
-                    startCamera();
+                    if (CURRENT_PAGE < PAGES) {
+                        startCamera();
+                    }
                 }
             }
         });
@@ -86,8 +85,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestCameraPermission() {
-        Log.w(TAG, "Camera permission is not granted. Requesting permission");
-
         final String[] permissions = new String[]{Manifest.permission.CAMERA};
 
         if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -104,8 +101,6 @@ public class MainActivity extends AppCompatActivity {
                         RC_HANDLE_CAMERA_PERM);
             }
         };
-
-        Log.e(TAG, "Permission granted");
     }
 
     private void startCamera() {
@@ -114,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 Intent i = new Intent(MainActivity.this, CaptureActivity.class);
                 startActivity(i);
-                finish();
             }
         }, TIME_OUT);
     }

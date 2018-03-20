@@ -27,7 +27,6 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_camera"
             android:theme="@style/FullscreenTheme" />
-        <activity android:name=".tempActivity" />
         <activity android:name=".BinarizationActivity" />
         <activity android:name=".RecognizerActivity"></activity>
     </application>

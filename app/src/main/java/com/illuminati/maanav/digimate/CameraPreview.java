@@ -12,12 +12,8 @@ import android.view.SurfaceView;
 
 import java.io.IOException;
 
-/**
- * Created by amura on 17/3/18.
- */
-
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private static final int ZOOM = 10;
+    private static final int ZOOM = 8;  // zoom factor
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private String TAG = "CameraPreview";
@@ -51,7 +47,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             // Call stopPreview() to stop updating the preview surface.
             mCamera.stopPreview();
             mCamera.release();
-
             mCamera = null;
         }
     }
@@ -60,46 +55,38 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // If your preview can change or rotate, take care of those events here.
         // Make sure to stop the preview before resizing or reformatting it.
 
-        if (mHolder.getSurface() == null){
+        if (mHolder.getSurface() == null) {
             // preview surface does not exist
             return;
         }
-
         // stop preview before making changes
         try {
             mCamera.stopPreview();
-        } catch (Exception e){
+        } catch (Exception e) {
             // ignore: tried to stop a non-existent preview
         }
-
         // set preview size and make any resize, rotate or
         // reformatting changes here
 
         // start preview with new settings
         try {
-
             mCamera.setDisplayOrientation(90);  // Rotate camera initially
             Camera.Parameters parameters = mCamera.getParameters();
 
-//            parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
             int maxZoom = parameters.getMaxZoom();
             Log.w(TAG, "zoom: " + maxZoom);
             if (parameters.isZoomSupported()) {
-                if (ZOOM >=0 && ZOOM < maxZoom) {
+                if (ZOOM >= 0 && ZOOM < maxZoom) {
                     parameters.setZoom(ZOOM);
-                } else {
-                    // zoom parameter is incorrect
                 }
             }
             requestLayout();
             mCamera.setParameters(parameters);
-
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
-
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
