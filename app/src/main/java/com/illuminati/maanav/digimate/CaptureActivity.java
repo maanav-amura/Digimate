@@ -44,6 +44,7 @@ public class CaptureActivity extends AppCompatActivity {
      * and a change of the status and navigation bar.
      */
     private static final int UI_ANIMATION_DELAY = 300;
+    public static Bitmap capturedImage;
     private static Camera mCamera = null;
     private static String TAG = "CaptureActivity";
     private final Handler mHideHandler = new Handler();
@@ -99,7 +100,6 @@ public class CaptureActivity extends AppCompatActivity {
         }
     };
     private CameraPreview mPreview;
-    public static Bitmap capturedImage;
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
 
         @Override
@@ -124,11 +124,10 @@ public class CaptureActivity extends AppCompatActivity {
             options.inPreferredConfig = Bitmap.Config.ARGB_8888;
             capturedImage = rotateImage(BitmapFactory.decodeFile(pictureFile.getAbsolutePath(), options), 180);
 
-//            Log.w(TAG, bitmap.toString().length() + "");
-
             nextStep();
         }
     };
+    private int TIME_DELAY = 3000;
 
     private static Bitmap rotateImage(Bitmap img, int degree) {
         Matrix matrix = new Matrix();
@@ -136,7 +135,6 @@ public class CaptureActivity extends AppCompatActivity {
         Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
         return rotatedImg;
     }
-    private int TIME_DELAY = 5000;
 
     public static Camera getCameraInstance() {
         Camera c = null;
@@ -156,13 +154,9 @@ public class CaptureActivity extends AppCompatActivity {
         } else {
             File folder_gui = new File(Environment.getExternalStorageDirectory() + File.separator + "abc");
             if (!folder_gui.exists()) {
-                Log.v("MAin", "Creating folder: " + folder_gui.getAbsolutePath());
                 folder_gui.mkdirs();
             }
-            Log.e("asdfasdf", "" + folder_gui.exists());
             File outFile = new File(folder_gui, "temp" + System.currentTimeMillis() + ".jpg");
-            Log.v("MAin", "Returnng file: " + outFile.getAbsolutePath());
-
             return outFile;
         }
     }

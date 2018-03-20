@@ -1,8 +1,5 @@
 package com.illuminati.maanav.digimate;
 
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
 import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -13,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -26,29 +22,33 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
+import com.itextpdf.text.BadElementException;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class RecognizerActivity extends AppCompatActivity implements  Toolbar.OnMenuItemClickListener {
-    private Toolbar toolbar;
-    private EditText search;
-    private TextView textView;
-    private String textScanned;
+public class RecognizerActivity extends AppCompatActivity implements Toolbar.OnMenuItemClickListener {
+    private static final String DATA_PATH = Environment.getExternalStorageDirectory() + File.separator + "abc";
     ProgressDialog progressCopy, progressOcr;
     TessBaseAPI baseApi;
     AsyncTask<Void, Void, Void> copy = new copyTask();
     AsyncTask<Void, Void, Void> ocr = new ocrTask();
-
-    private static final String DATA_PATH = Environment.getExternalStorageDirectory() + File.separator + "abc";
+    private Toolbar toolbar;
+    private EditText search;
+    private TextView textView;
+    private String textScanned;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,17 +80,20 @@ public class RecognizerActivity extends AppCompatActivity implements  Toolbar.On
 
         search.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
+
             @Override
             public void afterTextChanged(Editable editable) {
-                String ett = search.getText().toString().replaceAll("\n"," ");
-                String tvt = textView.getText().toString().replaceAll("\n"," ");
+                String ett = search.getText().toString().replaceAll("\n", " ");
+                String tvt = textView.getText().toString().replaceAll("\n", " ");
                 textView.setText(textView.getText().toString());
-                if(!ett.toString().isEmpty()) {
+                if (!ett.toString().isEmpty()) {
                     int ofe = tvt.toLowerCase().indexOf(ett.toLowerCase(), 0);
                     Spannable WordtoSpan = new SpannableString(textView.getText());
                     for (int ofs = 0; ofs < tvt.length() && ofe != -1; ofs = ofe + 1) {
@@ -111,17 +114,55 @@ public class RecognizerActivity extends AppCompatActivity implements  Toolbar.On
         ocr.execute();
 
 
+        Document document = new Document();
+        String dirpath = android.os.Environment.getExternalStorageDirectory().toString();
+        try {
+            PdfWriter.getInstance(document, new FileOutputStream(dirpath + "/example.pdf")); //  Change pdf's name.
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        document.open();
+        Image img = null;  // Change image's name and extension.
+        try {
+            img = Image.getInstance(dirpath + "/abc/" + "temp1.jpg");
+            Log.w("sdfasdfasdf", img.toString().length() + "");
+        } catch (BadElementException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        float scaler = ((document.getPageSize().getWidth() - document.leftMargin()
+                - document.rightMargin() - 0) / img.getWidth()) * 100; // 0 means you have no indentation. If you have any, change it.
+        img.scalePercent(scaler);
+        img.setAlignment(Image.ALIGN_CENTER | Image.ALIGN_TOP);
+        //img.setAlignment(Image.LEFT| Image.TEXTWRAP);
+
+ /* float width = document.getPageSize().width() - document.leftMargin() - document.rightMargin();
+ float height = document.getPageSize().height() - document.topMargin() - document.bottomMargin();
+ img.scaleToFit(width, height)*/  // Or try this.
+
+        try {
+            document.add(img);
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        }
+        document.close();
+
+
     }
 
-    private void recognizeText(){
+    private void recognizeText() {
         String language = "";
         if (BinarizationActivity.language == 0)
             language = "eng";
         else
-            language= "spa";
+            language = "spa";
 
         baseApi = new TessBaseAPI();
-        baseApi.init(DATA_PATH, language,TessBaseAPI.OEM_TESSERACT_ONLY);
+        baseApi.init(DATA_PATH, language, TessBaseAPI.OEM_TESSERACT_ONLY);
 //        baseApi.init("/mnt/sdcard/tesseract", "eng");
         baseApi.setImage(BinarizationActivity.umbralization);
         textScanned = baseApi.getUTF8Text();
@@ -137,15 +178,15 @@ public class RecognizerActivity extends AppCompatActivity implements  Toolbar.On
         } catch (IOException e) {
             Log.e("tag", "Failed to get asset file list.", e);
         }
-        for(String filename : files) {
-            Log.i("files",filename);
+        for (String filename : files) {
+            Log.i("files", filename);
             InputStream in = null;
             OutputStream out = null;
-            String dirout= DATA_PATH + "tessdata/";
+            String dirout = DATA_PATH + "tessdata/";
             File outFile = new File(dirout, filename);
-            if(!outFile.exists()) {
+            if (!outFile.exists()) {
                 try {
-                    in = assetManager.open("trainneddata/"+filename);
+                    in = assetManager.open("trainneddata/" + filename);
                     (new File(dirout)).mkdirs();
                     out = new FileOutputStream(outFile);
                     copyFile(in, out);
@@ -160,12 +201,40 @@ public class RecognizerActivity extends AppCompatActivity implements  Toolbar.On
             }
         }
     }
+
     private void copyFile(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[1024];
         int read;
-        while((read = in.read(buffer)) != -1){
+        while ((read = in.read(buffer)) != -1) {
             out.write(buffer, 0, read);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_result, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.copy_text:
+                ClipboardManager clipboard = (ClipboardManager)
+                        getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("TextScanner", textView.getText());
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(RecognizerActivity.this, "Text has been copied to clipboard", Toast.LENGTH_LONG).show();
+                break;
+            case R.id.new_scan:
+                Intent i = getBaseContext().getPackageManager()
+                        .getLaunchIntentForPackage(getBaseContext().getPackageName());
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(i);
+                break;
+        }
+        return false;
     }
 
     private class copyTask extends AsyncTask<Void, Void, Void> {
@@ -186,7 +255,7 @@ public class RecognizerActivity extends AppCompatActivity implements  Toolbar.On
 
         @Override
         protected Void doInBackground(Void... params) {
-            Log.i("CopyTask","copying..");
+            Log.i("CopyTask", "copying..");
             copyAssets();
             return null;
         }
@@ -209,37 +278,9 @@ public class RecognizerActivity extends AppCompatActivity implements  Toolbar.On
 
         @Override
         protected Void doInBackground(Void... params) {
-            Log.i("OCRTask","extracting..");
+            Log.i("OCRTask", "extracting..");
             recognizeText();
             return null;
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_result, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.copy_text:
-                ClipboardManager clipboard = (ClipboardManager)
-                        getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("TextScanner", textView.getText());
-                clipboard.setPrimaryClip(clip);
-                Toast.makeText(RecognizerActivity.this,"Text has been copied to clipboard", Toast.LENGTH_LONG).show();
-                break;
-            case R.id.new_scan:
-                Intent i = getBaseContext().getPackageManager()
-                        .getLaunchIntentForPackage( getBaseContext().getPackageName() );
-                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(i);
-                break;
-        }
-        return false;
     }
 }
